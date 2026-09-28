@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.parsers import MultiPartParser,FormParser
 from restaurant.permissions import IsOwnerorReadOnly
 from .models import Category,MenuItem
 from .serializers import CategorySerializer,MenuItemSerializer
@@ -17,3 +18,4 @@ class MenuItemViewSet(viewsets.ModelViewSet):
     permission_classes=[IsOwnerorReadOnly]
     filter_backends=[DjangoFilterBackend]
     filterset_fields=['category', 'is_available']
+    parser_classes=[MultiPartParser,FormParser]

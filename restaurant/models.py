@@ -4,7 +4,7 @@ from django.db import models
 class Restaurant(models.Model):
     name = models.CharField(max_length=100)
     address = models.TextField()
-    logo = models.ImageField(upload_to='restaurant/', blank='True', null='True')
+    logo = models.ImageField(upload_to='restaurant/', blank=True, null=True)
     phone = models.CharField(max_length=20)
     opening_time = models.TimeField()
     closing_time = models.TimeField()
