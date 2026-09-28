@@ -6,7 +6,7 @@ class User(AbstractUser):
     Role_Choices=(
         ('customer','Customer'),
         ('staff','Staff'),
-        ('admin','Admin')
+        ('owner','Owner')
     )
     role=models.CharField(max_length=10, choices=Role_Choices,default='customer')
     phone_number=models.CharField(max_length=20, blank='True')
