@@ -161,7 +161,9 @@ REST_FRAMEWORK = {
     'rest_framework.parsers.MultiPartParser',
     'rest_framework.parsers.FormParser',
 ),
+
 }
+
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Restaurant Ordering API',
