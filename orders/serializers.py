@@ -1,6 +1,6 @@
 from decimal import Decimal
 from rest_framework import serializers
-from .models import Cart, CartItem
+from .models import Cart, CartItem, Order, OrderItem
 from menu.models import MenuItem
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -43,3 +43,23 @@ class AddCartItemSerializer(serializers.Serializer):
 
 class UpdateCartItemSerializer(serializers.Serializer):
     quantity = serializers.IntegerField(min_value = 1 )
+
+
+#Order
+class OrderItemSerializer(serializers.ModelSerializer):
+    menu_item_name = serializers.CharField(source='menu_item.name', read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'menu_item', 'menu_item_name', 'quantity', 'price_at_order']
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'status', 'total_amount', 'delivery_address', 'created_at', 'items']
+        read_only_fields = ['status', 'total_amount']
+
+class PlaceOrderSerializer(serializers.Serializer):
+    delivery_address = serializers.CharField()
