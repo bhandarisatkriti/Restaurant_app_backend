@@ -6,6 +6,12 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.db import transaction
+from rest_framework.generics import ListAPIView, RetrieveAPIView
+from .models import Order, OrderItem
+from .serializers import OrderSerializer, PlaceOrderSerializer,OrderItemSerializer
+
+
 from .models import Cart, CartItem
 from .serializers import (
     CartSerializer, 
@@ -73,3 +79,53 @@ class CartItemDetailView(APIView):
         cart = get_user_cart(request.user)
         item = get_object_or_404(CartItem, pk=pk, cart=cart)
         return Response(status=204)
+
+
+
+class PlaceOrderView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(request=PlaceOrderSerializer, responses=OrderSerializer)
+    def post(self, request):
+        serializer = PlaceOrderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        cart = get_user_cart(request.user)
+        cart_items = list(cart.items.all())
+
+        if not cart_items:
+            return Response({'detail': 'Your cart is empty.'}, status=400)
+
+        with transaction.atomic():
+            total = sum(item.menu_item.price * item.quantity for item in cart_items)
+            order = Order.objects.create(
+                user=request.user,
+                total_amount=total,
+                delivery_address=serializer.validated_data['delivery_address'],
+            )
+            for item in cart_items:
+                OrderItem.objects.create(
+                    order=order,
+                    menu_item=item.menu_item,
+                    quantity=item.quantity,
+                    price_at_order=item.menu_item.price,
+                )
+            cart_items_qs = cart.items.all()
+            cart_items_qs.delete()
+
+        return Response(OrderSerializer(order).data, status=201)
+
+class OrderListView(ListAPIView):
+    serializer_class=OrderSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user).order_by('-created_at')
+
+
+class OrderDetailView(RetrieveAPIView):
+    serializer_class=OrderSerializer
+    permission_classes=[permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user)
