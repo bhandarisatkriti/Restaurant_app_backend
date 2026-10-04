@@ -20,6 +20,12 @@ from .serializers import (
     UpdateCartItemSerializer
 ) 
 
+
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers as drf_serializers
+from restaurant.permissions import IsStaffOrOwner
+from .models import Order, OrderItem
+
 # Create your views here.
 def get_user_cart(user):
     cart,_ = Cart.objects.get_or_create(user=user)
@@ -129,3 +135,41 @@ class OrderDetailView(RetrieveAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+
+
+VALID_TRANSITIONS = {
+    'pending': ['confirmed', 'cancelled'],
+    'confirmed': ['preparing', 'cancelled'],
+    'preparing': ['out_for_delivery'],
+    'out_for_delivery': ['delivered'],
+    'delivered': [],
+    'cancelled': [],
+}
+
+class UpdateOrderStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsStaffOrOwner]
+
+    @extend_schema(
+        request=inline_serializer(
+            name='UpdateOrderStatus',
+            fields={'status': drf_serializers.ChoiceField(choices=Order.STATUS_CHOICES)},
+        ),
+        responses=OrderSerializer,
+    )
+    def patch(self, request, pk):
+        order = get_object_or_404(Order, pk=pk)
+        new_status = request.data.get('status')
+
+        if new_status not in dict(Order.STATUS_CHOICES):
+            return Response({'detail': 'Invalid status value.'}, status=400)
+
+        allowed_next = VALID_TRANSITIONS.get(order.status, [])
+        if new_status not in allowed_next:
+            return Response(
+                {'detail': f'Cannot move from {order.status} to {new_status}.'},
+                status=400,
+            )
+
+        order.status = new_status
+        order.save()
+        return Response(OrderSerializer(order).data)
