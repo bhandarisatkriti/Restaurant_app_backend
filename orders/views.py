@@ -11,8 +11,7 @@ from rest_framework.generics import ListAPIView, RetrieveAPIView
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, PlaceOrderSerializer,OrderItemSerializer
 
-
-from .models import Cart, CartItem
+from .models import Cart, CartItem, Payment
 from .serializers import (
     CartSerializer, 
     CartItemSerializer, 
@@ -109,6 +108,7 @@ class PlaceOrderView(APIView):
                 total_amount=total,
                 delivery_address=serializer.validated_data['delivery_address'],
             )
+            Payment.objects.create(order=order, method='cod')
             for item in cart_items:
                 OrderItem.objects.create(
                     order=order,
@@ -173,3 +173,17 @@ class UpdateOrderStatusView(APIView):
         order.status = new_status
         order.save()
         return Response(OrderSerializer(order).data)
+
+from .serializers import PaymentSerializer
+
+
+class PaymentDetailView(RetrieveAPIView):
+    serializer_class = PaymentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    lookup_field = 'order_id'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role in ['staff', 'owner']:
+            return Payment.objects.all()
+        return Payment.objects.filter(order__user=user)
