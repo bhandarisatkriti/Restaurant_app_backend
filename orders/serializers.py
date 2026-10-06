@@ -1,6 +1,6 @@
 from decimal import Decimal
 from rest_framework import serializers
-from .models import Cart, CartItem, Order, OrderItem
+from .models import Cart, CartItem, Order, OrderItem, Payment
 from menu.models import MenuItem
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -63,3 +63,12 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class PlaceOrderSerializer(serializers.Serializer):
     delivery_address = serializers.CharField()
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['id', 'order', 'method', 'status', 'transaction_id', 'paid_at']
+        read_only_fields = ['method', 'status', 'transaction_id', 'paid_at']
+
+
