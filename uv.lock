@@ -458,6 +458,7 @@ dependencies = [
     { name = "pillow" },
     { name = "psycopg2-binary" },
     { name = "python-decouple" },
+    { name = "requests" },
 ]
 
 [package.metadata]
@@ -474,6 +475,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=12.3.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.13" },
     { name = "python-decouple", specifier = ">=3.8" },
+    { name = "requests", specifier = ">=2.34.2" },
 ]
 
 [[package]]

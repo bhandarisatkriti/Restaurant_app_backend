@@ -60,6 +60,7 @@ class Payment(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     transaction_id = models.CharField(max_length=100, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
+    transaction_uuid = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
         return f"Payment for Order #{self.order_id} ({self.status})"
